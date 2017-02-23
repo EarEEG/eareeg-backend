@@ -1,0 +1,3 @@
+[submodule "NeuroPy"]
+	path = NeuroPy
+	url = https://github.com/EarEEG/NeuroPy.git
