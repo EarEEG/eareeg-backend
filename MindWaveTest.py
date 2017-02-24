@@ -17,6 +17,10 @@ class mindwave_data(object):
         self.midGamma_list = []
         self.poorSignal_list = []
         self.blinkStrength_list = []
+    def print_list(self):
+        for i, j in vars(self).iteritems():
+            print " ".join([str(x) for x in j])
+
 
 
 # global variable because data collection is done through
@@ -84,7 +88,7 @@ def blinkStrength_callback(blinkStrength_value):
 # It connects to the headset and collects all data 
 # for that amount of time.
 def collect_data_points(mindwave_serial_port, num_seconds):
-    object1 = NP.NeuroPy(, 9600, log=True)
+    object1 = NP.NeuroPy(mindwave_serial_port, 9600, log=False)
 
     # Register callback functions
     object1.setCallBack("attention", attention_callback)
@@ -112,4 +116,5 @@ def collect_data_points(mindwave_serial_port, num_seconds):
     # be populated at this point
     object1.stop()
 
-
+collect_data_points("/dev/tty.MindWaveMobile-SerialPo", 30)
+global_mindwave_data.print_list()
