@@ -36,4 +36,4 @@ The data\_type parameter can be any of the following:
 * poorSignal
 * blinkStrength
 
-Most of the values are transmitted around once a second, but rawValue is sampled around 128 times a second. Due to this, the program transmits rawValue at incremental intervals instead of all at once. The data will be transmitted over a web socket using the data_type parameter as the event type.
+Most of the values are transmitted around once a second, but rawValue is sampled around 128 times a second. Due to this, the program transmits rawValue at incremental intervals instead of all at once. The data will be transmitted over a web socket using "data" as the event type.
