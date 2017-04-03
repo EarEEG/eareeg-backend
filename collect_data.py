@@ -2,9 +2,12 @@ import NeuroPy.NeuroPy as NP
 import mindwave_data
 import time
 
+
+
 # global variable because data collection is done through
 # callback functions
 global_mindwave_data = mindwave_data.mindwave_data()
+    
 
 # annoyingly long list of callback functions for each 
 # individual variable
