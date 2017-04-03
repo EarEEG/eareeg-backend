@@ -1,18 +1,19 @@
+#!venv/bin/python
 '''
 websocket_data_collector.py
 
 This script uses websockets to transmit data collected by the NeuroPy module to a remote server.
 '''
 
-import Neuropy.NeuroPy as NP
+import NeuroPy.NeuroPy as NP
 import socketIO_client
 import json
+import click
 
 CLIENT_ID = "CLIENT1"
-HOST = ""
-PORT = 0
 
-BLUETOOTH_SERIAL_PORT_NAME = "/dev/tty.MindWaveMobile-SerialPo"
+# declare this globally
+socketIO = None
 
 def on_connect():
     print("connected")
@@ -38,8 +39,8 @@ def generic_callback(variable_name, variable_val):
     return_dict["data"] = [{"type": variable_name, "value": variable_val}]
     socketIO.emit("data", return_dict, on_callback_response)
 
-def start_data_collection(mindwave_serial_port, num_seconds=-1):
-    headset_obj = NP.NeuroPy(mindwave_serial_port, 9600, log=False)
+def start_data_collection(serial_port, num_seconds=-1):
+    headset_obj = NP.NeuroPy(serial_port, 9600, log=False)
 
     headset_obj.setCallBack("attention", generic_callback)
     headset_obj.setCallBack("meditation", generic_callback)
@@ -57,7 +58,16 @@ def start_data_collection(mindwave_serial_port, num_seconds=-1):
 
     headset_obj.start()
 
-socketIO = socketIO_client.SocketIO(HOST, PORT, socketIO_client.Logging_Namespace)
-socketIO.on("connect", on_connect)
-socketIO.on("disconnect", on_disconnect)
-start_data_collection(BLUETOOTH_SERIAL_PORT_NAME)
+@click.command()
+@click.argument('host')
+@click.argument('port')
+@click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
+@click.option('--time', default=-1, help="Number of seconds to collect data")
+def main(host, port, serial_port, time):
+    socketIO = socketIO_client.SocketIO(host, port, socketIO_client.LoggingNamespace)
+    socketIO.on("connect", on_connect)
+    socketIO.on("disconnect", on_disconnect)
+    start_data_collection(serial_port, time)
+
+if __name__ == "__main__":
+    main()
