@@ -6,7 +6,7 @@ This script uses websockets to transmit data collected by the NeuroPy module to 
 '''
 
 import NeuroPy.NeuroPy as NP
-import socketIO_client
+import websocket
 import json
 import click
 from threading import Lock
@@ -14,7 +14,7 @@ from threading import Lock
 CLIENT_ID = "CLIENT1"
 
 # declare this globally
-socketIO = None
+ws = None
 lock = None
 
 def on_connect():
@@ -28,10 +28,12 @@ def on_callback_response(*args):
 
 # generic callback function for neuropy
 # which sends the data collected over socketio
+# no clue if this works yet
 def generic_callback(variable_name, variable_val):
     # generate the dictionary to send to the remote server
     # as specified in the doc
     return_dict = {}
+    return_dict["message_type"] = "data"
     return_dict["client_id"] = CLIENT_ID
 
     # for now, do nothing when setting rawData
@@ -39,9 +41,9 @@ def generic_callback(variable_name, variable_val):
         return
     
     return_dict["data"] = [{"type": variable_name, "value": variable_val}]
-    lock.acquire()
-    socketIO.emit("data", return_dict, on_callback_response)
-    lock.release()
+    #lock.acquire()
+    ws.send(json.dumps(return_dict))
+    #lock.release()
 
 def start_data_collection(serial_port, num_seconds=-1):
     headset_obj = NP.NeuroPy(serial_port, 9600, log=False)
@@ -62,21 +64,22 @@ def start_data_collection(serial_port, num_seconds=-1):
 
     headset_obj.start()
 
+def on_open(ws):
+    ws.send("Hello World!")
+
 @click.command()
 @click.argument('host')
 @click.argument('port')
 @click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
 @click.option('--time', default=-1, help="Number of seconds to collect data")
 def main(host, port, serial_port, time):
-    lock = Lock()
-    socketIO = socketIO_client.SocketIO(host, port)
-    print("Got here")
+    ws = websocket.create_connection("ws://localhost:9000", on_message=on_callback_response)
+    ws.send("Hello World!")
+    print(ws.recv())
+    ws.close()
     #socketIO.on("connect", on_connect)
     #socketIO.on("disconnected", on_disconnect)
     #start_data_collection(serial_port, time)
-    for i in range(10):
-        socketIO.emit("data", {"test": i})
-    socketIO.wait(seconds=1)
     
 
 if __name__ == "__main__":
