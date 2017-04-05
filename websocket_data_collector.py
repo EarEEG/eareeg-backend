@@ -9,11 +9,13 @@ import NeuroPy.NeuroPy as NP
 import socketIO_client
 import json
 import click
+from threading import Lock
 
 CLIENT_ID = "CLIENT1"
 
 # declare this globally
 socketIO = None
+lock = None
 
 def on_connect():
     print("connected")
@@ -37,7 +39,9 @@ def generic_callback(variable_name, variable_val):
         return
     
     return_dict["data"] = [{"type": variable_name, "value": variable_val}]
+    lock.acquire()
     socketIO.emit("data", return_dict, on_callback_response)
+    lock.release()
 
 def start_data_collection(serial_port, num_seconds=-1):
     headset_obj = NP.NeuroPy(serial_port, 9600, log=False)
@@ -64,10 +68,16 @@ def start_data_collection(serial_port, num_seconds=-1):
 @click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
 @click.option('--time', default=-1, help="Number of seconds to collect data")
 def main(host, port, serial_port, time):
-    socketIO = socketIO_client.SocketIO(host, port, socketIO_client.LoggingNamespace)
-    socketIO.on("connect", on_connect)
-    socketIO.on("disconnect", on_disconnect)
-    start_data_collection(serial_port, time)
+    lock = Lock()
+    socketIO = socketIO_client.SocketIO(host, port)
+    print("Got here")
+    #socketIO.on("connect", on_connect)
+    #socketIO.on("disconnected", on_disconnect)
+    #start_data_collection(serial_port, time)
+    for i in range(10):
+        socketIO.emit("data", {"test": i})
+    socketIO.wait(seconds=1)
+    
 
 if __name__ == "__main__":
     main()
