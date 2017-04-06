@@ -31,17 +31,12 @@ def on_callback_response(*args):
 def generic_callback(variable_name, variable_val):
     # generate the dictionary to send to the remote server
     # as specified in the doc
-    return_dict = {}
-    return_dict["client_id"] = CLIENT_ID
-
-    # for now, do nothing when setting rawData
-    if variable_name == "rawData":
+    if variable_name == "rawValue":
         return
-    
-    return_dict["data"] = [{"type": variable_name, "value": variable_val}]
-    lock.acquire()
-    socketIO.emit("data", return_dict, on_callback_response)
-    lock.release()
+
+    global filename
+    print("writing")
+    filename.write("{} {}\n".format(variable_name, variable_val))
 
 def start_data_collection(serial_port, num_seconds=-1):
     headset_obj = NP.NeuroPy(serial_port, 9600, log=False)
@@ -61,23 +56,19 @@ def start_data_collection(serial_port, num_seconds=-1):
     headset_obj.setCallBack("blinkStrength", generic_callback)
 
     headset_obj.start()
+    if num_seconds != -1:
+        time.sleep(num_seconds)
+        headset_obj.stop()
 
 @click.command()
-@click.argument('host')
-@click.argument('port')
+@click.argument('runfile')
+@click.argument('clientid')
 @click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
-@click.option('--time', default=-1, help="Number of seconds to collect data")
-def main(host, port, serial_port, time):
-    lock = Lock()
-    socketIO = socketIO_client.SocketIO(host, port)
-    print("Got here")
-    #socketIO.on("connect", on_connect)
-    #socketIO.on("disconnected", on_disconnect)
-    #start_data_collection(serial_port, time)
-    for i in range(10):
-        socketIO.emit("data", {"test": i})
-    socketIO.wait(seconds=1)
-    
+@click.option('--time', default=5, help="Number of seconds to collect data")
+def main(runfile, clientid, serial_port, time):
+    global filename
+    filename = open("{}:{}".format(runfile,clientid), "w")
+    start_data_collection(serial_port, time) 
 
 if __name__ == "__main__":
     main()
