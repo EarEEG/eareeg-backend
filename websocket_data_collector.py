@@ -51,7 +51,7 @@ def generic_callback(variable_name, variable_val):
     #lock.acquire()
     global x_count
     global ws
-    ws.send(str(x_count))
+    ws.send("{} {}".format(CLIENT_ID, str(x_count)))
     x_count += 1
     #lock.release()
 
@@ -88,12 +88,16 @@ def on_open(ws):
 @click.argument('websocket_server')
 @click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
 @click.option('--time', default=-1, help="Number of seconds to collect data")
-def main(websocket_server, serial_port, time):
+@click.option('--client_id', default="client1", help="Client ID of the client")
+def main(websocket_server, serial_port, time, client_id):
     global TIME
     TIME = time
 
     global SERIAL_PORT
     SERIAL_PORT = serial_port
+
+    global CLIENT_ID
+    CLIENT_ID = client_id
 
     global ws
 
