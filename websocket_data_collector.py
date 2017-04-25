@@ -10,12 +10,14 @@ import socketIO_client
 import json
 import click
 from threading import Lock
+import time
 
 CLIENT_ID = "CLIENT1"
 
 # declare this globally
 socketIO = None
 lock = None
+x = 0
 
 def on_connect():
     print("connected")
@@ -35,7 +37,10 @@ def generic_callback(variable_name, variable_val):
         return
 
     global filename
-    print("writing")
+    global x
+    if x % 20 == 0:
+        print("wrote 20 measurements")
+    x += 1
     filename.write("{} {}\n".format(variable_name, variable_val))
 
 def start_data_collection(serial_port, num_seconds=-1):
@@ -62,12 +67,12 @@ def start_data_collection(serial_port, num_seconds=-1):
 
 @click.command()
 @click.argument('runfile')
-@click.argument('clientid')
+#@click.argument('clientid')
 @click.option('--serial_port', default="/dev/tty.MindWaveMobile-SerialPo", help="Serial port of bluetooth headset")
 @click.option('--time', default=5, help="Number of seconds to collect data")
-def main(runfile, clientid, serial_port, time):
+def main(runfile, serial_port, time):
     global filename
-    filename = open("{}:{}".format(runfile,clientid), "w")
+    filename = open("{}".format(runfile), "w")
     start_data_collection(serial_port, time) 
 
 if __name__ == "__main__":
